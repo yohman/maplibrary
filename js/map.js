@@ -44,6 +44,10 @@ let panStartMaxYear;
 // Map Opacity State
 let currentMapOpacity = 0.85; // Default opacity
 
+// Pinch Zoom State for Timeline
+let initialPinchDistance = 0;
+let isPinching = false;
+
 menuToggle.addEventListener('click', () => {
 	sidePanel.classList.toggle('open');
 	menuToggle.classList.toggle('open');
@@ -53,6 +57,11 @@ menuToggle.addEventListener('click', () => {
 		setTimeout(() => map.invalidateSize(), sidePanel.classList.contains('open') ? 150 : 300);
 	}
 });
+
+// Helper function to calculate distance between two touches
+function getDistance(touch1, touch2) {
+    return Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
+}
 
 window.addEventListener('resize', () => {
 	if (map) {
@@ -539,6 +548,109 @@ if (timelinePanel) {
         updateZoomIndicator();
         createTimeline(); // This will also update cursor based on new zoom level
     }, { passive: false });
+
+    // --- Timeline Pinch Zoom Event Listeners ---
+    timelinePanel.addEventListener('touchstart', function(event) {
+        if (event.touches.length === 2) {
+            // Ignore pinch if it starts on the opacity slider
+            if (event.target.closest('#opacity-slider-container')) return;
+            
+            isPinching = true;
+            initialPinchDistance = getDistance(event.touches[0], event.touches[1]);
+            event.preventDefault(); // Prevent page scroll/zoom
+        }
+    }, { passive: false });
+
+    timelinePanel.addEventListener('touchmove', function(event) {
+        if (!isPinching || event.touches.length !== 2) {
+            if (isPinching && event.touches.length < 2) { // Handle case where one finger is lifted during move
+                isPinching = false;
+                initialPinchDistance = 0;
+            }
+            return;
+        }
+        // Ignore pinch if it moves over the opacity slider (though start is already ignored)
+        if (event.target.closest('#opacity-slider-container')) return;
+
+        event.preventDefault(); // Prevent page scroll/zoom
+
+        const currentPinchDistance = getDistance(event.touches[0], event.touches[1]);
+
+        if (initialPinchDistance <= 0) { // Safety check
+            initialPinchDistance = currentPinchDistance;
+            return;
+        }
+
+        const zoomFactor = currentPinchDistance / initialPinchDistance;
+        const oldTimelineZoomLevel = timelineZoomLevel;
+        
+        let newProposedZoomLevel = timelineZoomLevel * zoomFactor;
+        timelineZoomLevel = Math.max(MIN_TIMELINE_ZOOM, Math.min(MAX_TIMELINE_ZOOM, newProposedZoomLevel));
+
+        if (timelineZoomLevel === oldTimelineZoomLevel && initialPinchDistance === currentPinchDistance) {
+             // No change in zoom or distance, no need to proceed (e.g. at limits and fingers didn't move)
+            return;
+        }
+        if (timelineZoomLevel === oldTimelineZoomLevel && initialPinchDistance !== currentPinchDistance) {
+            // Zoom level clamped, but fingers moved. Update initialPinchDistance for next event.
+            initialPinchDistance = currentPinchDistance;
+            return;
+        }
+
+
+        const timelineRect = timelineCirclesContainer.getBoundingClientRect();
+        // Calculate midpoint of the pinch gesture relative to the timeline
+        const midpointX = (event.touches[0].clientX + event.touches[1].clientX) / 2;
+        const pinchXRelative = midpointX - timelineRect.left;
+        const pinchXPercent = Math.max(0, Math.min(1, pinchXRelative / timelineRect.width));
+
+        // Year at the pinch center before this zoom adjustment
+        const yearAtPinchCenter = currentDisplayMinYear + pinchXPercent * (currentDisplayMaxYear - currentDisplayMinYear);
+
+        const totalGlobalYearSpan = maxYearGlobal - minYearGlobal <= 0 ? 1 : maxYearGlobal - minYearGlobal;
+        let newVisibleYearSpan = totalGlobalYearSpan / timelineZoomLevel;
+
+        currentDisplayMinYear = yearAtPinchCenter - (pinchXPercent * newVisibleYearSpan);
+        currentDisplayMaxYear = yearAtPinchCenter + ((1 - pinchXPercent) * newVisibleYearSpan);
+
+        // Clamp to global bounds
+        if (currentDisplayMinYear < minYearGlobal) {
+            currentDisplayMinYear = minYearGlobal;
+            currentDisplayMaxYear = minYearGlobal + newVisibleYearSpan;
+        }
+        if (currentDisplayMaxYear > maxYearGlobal) {
+            currentDisplayMaxYear = maxYearGlobal;
+            currentDisplayMinYear = maxYearGlobal - newVisibleYearSpan;
+        }
+        // Final re-clamp to ensure min/max are within global and min < max
+        if (currentDisplayMinYear < minYearGlobal) currentDisplayMinYear = minYearGlobal;
+        if (currentDisplayMaxYear > maxYearGlobal) currentDisplayMaxYear = maxYearGlobal;
+        
+        if (currentDisplayMinYear >= currentDisplayMaxYear) {
+             // This can happen if newVisibleYearSpan is larger than totalGlobalYearSpan after clamping
+            currentDisplayMinYear = minYearGlobal;
+            currentDisplayMaxYear = maxYearGlobal;
+            // If we had to reset to full view due to invalid range, also reset zoom level to minimum
+            if (newVisibleYearSpan > totalGlobalYearSpan) {
+                 timelineZoomLevel = MIN_TIMELINE_ZOOM;
+            }
+        }
+
+        updateZoomIndicator();
+        createTimeline();
+
+        // Update initialPinchDistance for the next move event to make zoom continuous
+        initialPinchDistance = currentPinchDistance;
+
+    }, { passive: false });
+
+    timelinePanel.addEventListener('touchend', function(event) {
+        // Reset pinch state if less than 2 fingers are touching
+        if (isPinching && event.touches.length < 2) {
+            isPinching = false;
+            initialPinchDistance = 0;
+        }
+    });
 }
 
 // --- Timeline Panning Event Listeners ---

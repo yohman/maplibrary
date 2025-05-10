@@ -36,7 +36,7 @@ let currentDisplayMinYear;
 let currentDisplayMaxYear;
 
 // Timeline Panning State
-let isPanning = false;
+let isTimelinePanning = false; // Renamed from isPanning
 let panStartX;
 let panStartMinYear;
 let panStartMaxYear;
@@ -554,6 +554,7 @@ if (timelinePanel) {
         if (event.touches.length === 2) {
             // Ignore pinch if it starts on the opacity slider
             if (event.target.closest('#opacity-slider-container')) return;
+            if (isTimelinePanning) return; // Don't start pinch if pan is active
             
             isPinching = true;
             initialPinchDistance = getDistance(event.touches[0], event.touches[1]);
@@ -655,24 +656,57 @@ if (timelinePanel) {
 
 // --- Timeline Panning Event Listeners ---
 if (timelineCirclesContainer) { // Attach to the circles container for better UX
-    timelineCirclesContainer.addEventListener('mousedown', function(event) {
-        if (timelineZoomLevel > MIN_TIMELINE_ZOOM) {
-            isPanning = true;
-            panStartX = event.clientX;
-            panStartMinYear = currentDisplayMinYear;
-            panStartMaxYear = currentDisplayMaxYear;
-            timelineCirclesContainer.style.cursor = 'grabbing';
-            // Prevent text selection during pan
-            event.preventDefault(); 
-        }
-    });
+    timelineCirclesContainer.addEventListener('mousedown', handlePanStart);
+    timelineCirclesContainer.addEventListener('touchstart', handlePanStart, { passive: false });
 }
 
-document.addEventListener('mousemove', function(event) {
-    if (!isPanning) return;
+function handlePanStart(event) {
+    if (event.type === 'touchstart' && event.touches.length !== 1) {
+        // If more than one touch, it might be a pinch, so don't pan.
+        // Pinch is handled by timelinePanel's listeners.
+        return;
+    }
+    if (isPinching) return; // Don't start pan if pinch is active
 
-    const deltaX = event.clientX - panStartX;
+    if (timelineZoomLevel > MIN_TIMELINE_ZOOM) {
+        isTimelinePanning = true;
+        if (event.type === 'touchstart') {
+            panStartX = event.touches[0].clientX;
+        } else { // mousedown
+            panStartX = event.clientX;
+        }
+        panStartMinYear = currentDisplayMinYear;
+        panStartMaxYear = currentDisplayMaxYear;
+        timelineCirclesContainer.style.cursor = 'grabbing';
+        // Prevent text selection during pan and default touch actions like scrolling
+        event.preventDefault(); 
+    }
+}
+
+document.addEventListener('mousemove', handlePanMove);
+document.addEventListener('touchmove', handlePanMove, { passive: false });
+
+function handlePanMove(event) {
+    if (!isTimelinePanning) return;
+
+    let currentX;
+    if (event.type === 'touchmove') {
+        if (event.touches.length !== 1) {
+            // If number of touches changes, stop panning to avoid conflict (e.g. pinch starting)
+            isTimelinePanning = false;
+            timelineCirclesContainer.style.cursor = timelineZoomLevel > MIN_TIMELINE_ZOOM ? 'grab' : 'default';
+            return;
+        }
+        currentX = event.touches[0].clientX;
+        event.preventDefault(); // Prevent scrolling during touch pan
+    } else { // mousemove
+        currentX = event.clientX;
+    }
+
+    const deltaX = currentX - panStartX;
     const timelineWidth = timelineCirclesContainer.offsetWidth;
+    // If timelineWidth is 0, avoid division by zero, though this shouldn't happen if visible.
+    if (timelineWidth === 0) return; 
     const displayYearSpan = panStartMaxYear - panStartMinYear;
     
     // Calculate how many years the deltaX represents
@@ -685,15 +719,33 @@ document.addEventListener('mousemove', function(event) {
     if (newMinYear < minYearGlobal) {
         newMinYear = minYearGlobal;
         newMaxYear = newMinYear + displayYearSpan;
+        // Ensure newMaxYear doesn't exceed global max after adjusting newMinYear
+        if (newMaxYear > maxYearGlobal) newMaxYear = maxYearGlobal;
     }
     if (newMaxYear > maxYearGlobal) {
         newMaxYear = maxYearGlobal;
         newMinYear = newMaxYear - displayYearSpan;
+        // Ensure newMinYear doesn't go below global min
+        if (newMinYear < minYearGlobal) newMinYear = minYearGlobal;
     }
-    // Ensure minYear is still less than maxYear after clamping (especially if displayYearSpan is larger than global span)
-    if (newMinYear >= newMaxYear) {
-        newMinYear = minYearGlobal; // Or some other reset logic
-        newMaxYear = maxYearGlobal;
+    
+    // Final check to ensure minYear is still less than maxYear and within global bounds
+    // This handles cases where displayYearSpan might be larger than global span after clamping.
+    if (newMinYear < minYearGlobal) newMinYear = minYearGlobal;
+    if (newMaxYear > maxYearGlobal) newMaxYear = maxYearGlobal;
+    if (newMinYear >= newMaxYear && !(minYearGlobal === maxYearGlobal && newMinYear === minYearGlobal)) {
+        // If range becomes invalid, try to keep the span but fit it.
+        // Or, more simply, if the span is larger than global, reset to global.
+        if (displayYearSpan > (maxYearGlobal - minYearGlobal)) {
+            newMinYear = minYearGlobal;
+            newMaxYear = maxYearGlobal;
+        } else {
+            // Attempt to correct, but this state should ideally be avoided by prior clamping.
+            // For now, if it's still invalid, could reset or log error.
+            // Fallback to a safe state if clamping logic is insufficient.
+             newMinYear = Math.max(minYearGlobal, Math.min(newMinYear, maxYearGlobal - displayYearSpan));
+             newMaxYear = newMinYear + displayYearSpan;
+        }
     }
 
 
@@ -702,23 +754,27 @@ document.addEventListener('mousemove', function(event) {
 
     updateZoomIndicator();
     createTimeline();
-});
+}
 
-document.addEventListener('mouseup', function() {
-    if (isPanning) {
-        isPanning = false;
+document.addEventListener('mouseup', handlePanEnd);
+document.addEventListener('touchend', handlePanEnd);
+document.addEventListener('touchcancel', handlePanEnd);
+
+function handlePanEnd() {
+    if (isTimelinePanning) {
+        isTimelinePanning = false;
         if (timelineZoomLevel > MIN_TIMELINE_ZOOM) {
             timelineCirclesContainer.style.cursor = 'grab';
         } else {
             timelineCirclesContainer.style.cursor = 'default';
         }
     }
-});
+}
 
-// Optional: If mouse leaves the window while panning
+// Optional: If mouse leaves the window while panning (already exists, ensure it uses isTimelinePanning)
 document.addEventListener('mouseleave', function() {
-    if (isPanning) {
-        isPanning = false;
+    if (isTimelinePanning && event.relatedTarget === null) { // Check if mouse left the window entirely
+        isTimelinePanning = false;
          if (timelineZoomLevel > MIN_TIMELINE_ZOOM) {
             timelineCirclesContainer.style.cursor = 'grab';
         } else {

@@ -1,0 +1,26 @@
+
+@media only screen and (min-width : 800px) {
+	html { height: 100% }
+	body { height: 100%; margin: 0px; padding: 0px; background: white !important; color: #bbb; }
+	#container {position: fixed;background-color: white;left:0px; width: 264px; height: 106px}
+	#mapBody { float:center;height:100%; margin-left:300px; margin-top:-60px;visibility:hidden;overflow-y: hidden;}
+	#introBody { float:center; margin-left:550px; padding-top: 200px; font-size: 24px;}
+	#side_panel { position:absolute; width:280px; height: 100%; overflow:auto; float:left; padding-left:10px; padding-right:10px; cursor: pointer; cursor: hand; }
+	.tocmap {padding:10px !important;margin-bottom: 5px !important;}
+	.tocmap:hover {background:darkgray;}
+	#explainModal {padding: 20px;}
+	#title {cursor: text !!important;}
+	#results {top:15px;}
+}
+
+@media only screen and (max-width : 800px) {
+	#container {position: fixed;background-color: white;left:0px; width: 124px; height: 140px;top:-22px;}
+	#side_panel { position:absolute; width:150px; height: 100%; overflow:auto; float:left; padding-left:10px; padding-right:10px; cursor: pointer; cursor: hand; }
+	#mapBody { float:center;height:100%; margin-left:150px; margin-top:-128px;visibility:hidden;overflow-y: hidden;}
+	.btn-sm {margin-left: -15px !important;}
+	#introBody { float:center; margin-left:9em; padding-top: 200px; font-size: 24px;}
+}
+
+#kmlButton {position: absolute; top: 10px}
+#kmlexplain > div:nth-child(1) > div:nth-child(1) > h4:nth-child(1) {padding-left: 40px}
+

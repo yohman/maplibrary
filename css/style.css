@@ -1,0 +1,469 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Modern font */
+    overflow-x: hidden; /* Prevent horizontal scrollbar */
+}
+
+#map-container { /* NEW: wrapper for map for panel adjustments */
+    position: relative;
+    width: 100%;
+    height: 100vh;
+}
+
+#map {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0; /* Initially map takes full width */
+    width: 100%;
+    transition: left 0.3s ease-in-out, width 0.3s ease-in-out; /* Smooth transition for map */
+}
+
+/* Side Panel Styles */
+#side-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 300px; 
+    height: 100%;
+    background-color: #1C1C1C; 
+    color: #F4F4F4; 
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+    transform: translateX(-100%); 
+    transition: transform 0.3s ease-in-out;
+    z-index: 1000; 
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+
+#side-panel.open {
+    transform: translateX(0);
+}
+
+#side-panel h1 {
+    font-size: 1.8em;
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-weight: 300; 
+    color: #F4F4F4; 
+}
+
+#search-box {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #999999; 
+    border-radius: 4px;
+    background-color: #000000; 
+    color: #F4F4F4; 
+    font-size: 1em;
+    box-sizing: border-box;
+}
+
+#search-box::placeholder {
+    color: #999999; 
+}
+
+/* Menu Toggle Button Styles */
+#menu-toggle {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    width: 40px;
+    height: 30px;
+    background: #000000; 
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 1001; 
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    padding: 6px;
+    box-sizing: border-box;
+    transition: left 0.3s ease-in-out;
+}
+
+#menu-toggle.open {
+    left: 315px; 
+}
+
+#menu-toggle span {
+    display: block;
+    width: 100%;
+    height: 3px;
+    background-color: #DA3832; 
+    border-radius: 1px;
+    transition: all 0.3s ease-in-out;
+}
+
+#menu-toggle.open span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+#menu-toggle.open span:nth-child(2) {
+    opacity: 0;
+}
+#menu-toggle.open span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+}
+
+/* Adjust map when panel is open */
+#map.panel-open {
+    left: 300px; 
+    width: calc(100% - 300px);
+}
+
+/* Map Cards Styles */
+#map-cards-container {
+    flex-grow: 1; /* Allows container to fill remaining space */
+    overflow-y: auto; /* Scroll for map cards */
+    margin-top: 10px;
+}
+
+.map-card {
+    background-color: #000000; 
+    color: #F4F4F4; 
+    border: 1px solid #999999; 
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 10px; /* Spacing between cards */
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.map-card:hover {
+    background-color: #333333; 
+}
+
+.map-card-thumbnail { /* NEW: Styles for thumbnail */
+    width: 100%; /* Make thumbnail responsive within card */
+    height: 150px; /* Fixed height, adjust as needed */
+    object-fit: cover; /* Cover the area, might crop */
+    border-radius: 3px; /* Slightly rounded corners for the image */
+    margin-bottom: 10px; /* Space below thumbnail */
+}
+
+.map-card-title {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #DA3832; 
+    margin-bottom: 5px;
+}
+
+.map-card-info {
+    font-size: 0.9em;
+    color: #999999; 
+    margin-bottom: 3px;
+}
+
+#timeline-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100px; /* Increased height for more vertical space */
+    background-color: #1C1C1C;
+    z-index: 999;
+    border-top: 1px solid #999999;
+    display: flex;
+    align-items: center;
+    padding: 0 30px; 
+    box-sizing: border-box;
+}
+
+#timeline-line-container {
+    position: relative;
+    width: 100%;
+    height: 70px; /* Increased height for vertical spread of circles */
+}
+
+#timeline-line {
+    position: absolute;
+    width: 100%;
+    height: 2px; /* Slightly thicker line */
+    background-color: #DA3832;
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 1px;
+}
+
+#timeline-circles-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.timeline-map-circle {
+    position: absolute;
+    width: 8px; /* Slightly larger circle */
+    height: 8px; /* Slightly larger circle */
+    background-color: #000; 
+    border: 1px solid #DA3832;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s, border-color 0.2s;
+    z-index: 1;
+}
+
+.timeline-map-circle:hover {
+    background-color: #DA3832;
+    transform: scale(1.3); /* Apply scale without translate override */
+    border-color: white;
+}
+
+.timeline-map-circle.highlighted {
+    background-color: #DA3832;
+    border: 2px solid white; /* Make highlight distinct */
+    transform: scale(1.4); /* Apply scale without translate override */
+    z-index: 2;
+}
+
+#timeline-tooltip {
+    display:none;
+    position:fixed;
+    background:#333;
+    color:white;
+    border:1px solid #DA3832;
+    padding:5px 8px;
+    border-radius:4px;
+    z-index:1010;
+    font-size:0.9em;
+    pointer-events:none;
+}
+.map-card.highlighted {
+    border-left: 4px solid #DA3832;
+    background-color: #2a2a2a; /* Darker highlight for card */
+}
+
+#opacity-slider-container {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(28, 28, 28, 0.85); /* #1C1C1C with transparency */
+    padding: 8px 12px;
+    border-radius: 5px;
+    z-index: 1000; /* Above map, below menu toggle if it overlaps */
+    color: #F4F4F4;
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+#opacity-slider-container label {
+    margin-right: 8px;
+    white-space: nowrap;
+}
+
+#opacity-slider {
+    width: 100px; /* Adjust as needed */
+    cursor: pointer;
+    -webkit-appearance: none; /* Override default Webkit styles */
+    appearance: none;
+    background: transparent; /* Make background transparent for custom track */
+}
+
+/* Webkit (Chrome, Safari, Edge) Track */
+#opacity-slider::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 6px;
+    cursor: pointer;
+    background: #333333; /* Darker grey for track */
+    border-radius: 3px;
+    border: 1px solid #555555;
+}
+
+/* Webkit Thumb */
+#opacity-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    border: 1px solid #000000;
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+    background: #DA3832; /* Accent color for thumb */
+    cursor: pointer;
+    margin-top: -6px; /* Adjust to center thumb on track */
+    box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+}
+
+/* Firefox Track */
+#opacity-slider::-moz-range-track {
+    width: 100%;
+    height: 6px;
+    cursor: pointer;
+    background: #333333;
+    border-radius: 3px;
+    border: 1px solid #555555;
+}
+
+/* Firefox Thumb */
+#opacity-slider::-moz-range-thumb {
+    border: 1px solid #000000;
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+    background: #DA3832;
+    cursor: pointer;
+    box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+}
+
+/* IE Track - basic styling */
+#opacity-slider::-ms-track {
+    width: 100%;
+    height: 6px;
+    cursor: pointer;
+    background: transparent; /* IE uses its own track styling, hide default */
+    border-color: transparent;
+    color: transparent;
+}
+
+#opacity-slider::-ms-fill-lower {
+    background: #DA3832; /* Color for the part of the track before the thumb */
+    border: 1px solid #555555;
+    border-radius: 3px;
+}
+
+#opacity-slider::-ms-fill-upper {
+    background: #333333; /* Color for the part of the track after the thumb */
+    border: 1px solid #555555;
+    border-radius: 3px;
+}
+
+#opacity-slider::-ms-thumb {
+    border: 1px solid #000000;
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+    background: #DA3832;
+    cursor: pointer;
+    margin-top: 0px; /* IE handles thumb positioning differently */
+    box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+}
+
+/* Mobile Friendliness */
+@media (max-width: 768px) {
+    #side-panel {
+        width: 250px; /* Slightly reduce default width for panel toggle visibility */
+        padding: 15px;
+    }
+
+    #side-panel.open {
+        width: 85%; /* Make panel take more width when open */
+    }
+
+    #side-panel h1 {
+        font-size: 1.5em;
+        margin-bottom: 15px;
+    }
+
+    #search-box {
+        padding: 8px;
+        font-size: 0.95em;
+        margin-bottom: 15px;
+    }
+
+    #menu-toggle.open {
+        left: calc(85% + 10px); /* Adjust based on new panel width */
+    }
+
+    #map.panel-open {
+        left: 85%; 
+        width: calc(100% - 85%); /* Adjust map width when panel is open */
+    }
+    
+    /* If panel is full width when open, map would be fully covered or pushed off */
+    /* Example for full-width panel (alternative):
+    #side-panel.open {
+        width: 100%;
+    }
+    #menu-toggle.open {
+        left: calc(100% - 50px); // Or hide it / change icon to close
+    }
+    #map.panel-open {
+        left: 100%; 
+        width: 0; // Or display: none;
+    }
+    */
+
+    .map-card-title {
+        font-size: 1em;
+    }
+    .map-card-info {
+        font-size: 0.85em;
+    }
+
+    #timeline-panel {
+        height: 80px; /* Reduce timeline panel height */
+        padding: 0 15px; /* Reduce padding */
+    }
+
+    #timeline-line-container {
+        height: 50px; /* Reduce line container height */
+    }
+    
+    #timeline-zoom-indicator {
+        font-size: 0.7em;
+        top: 3px;
+        right: 5px;
+    }
+
+    #opacity-slider-container {
+        padding: 6px 8px;
+        font-size: 0.8em;
+        top: 5px; /* Adjust if it clashes with menu toggle */
+        right: 5px;
+    }
+    
+    #opacity-slider-container label {
+        margin-right: 5px;
+    }
+
+    #opacity-slider {
+        width: 80px; 
+    }
+     /* Adjust thumb size for easier touch */
+    #opacity-slider::-webkit-slider-thumb {
+        height: 20px;
+        width: 20px;
+        margin-top: -8px; /* Re-center */
+    }
+    #opacity-slider::-moz-range-thumb {
+        height: 20px;
+        width: 20px;
+    }
+    #opacity-slider::-ms-thumb {
+        height: 20px;
+        width: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    #side-panel {
+        width: 200px; 
+    }
+    
+    #menu-toggle {
+        top: 10px;
+        left: 10px;
+    }
+    
+    #menu-toggle.open {
+         /* Assuming 85% width for open panel from 768px breakpoint is still desired */
+        left: calc(85% + 5px);
+    }
+
+    #timeline-panel {
+        height: 70px;
+    }
+    #timeline-line-container {
+        height: 40px;
+    }
+    .timeline-map-circle {
+        width: 6px;
+        height: 6px;
+    }
+}

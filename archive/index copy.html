@@ -1,0 +1,152 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+
+	<link rel="stylesheet" href="css/style.css">
+
+	<!-- jQuery -->
+	<script src="js/jquery-1.11.0.min.js"></script>
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+	<script src="js/bootstrap.min.js"></script>
+	<script src="js/hc_maps.js"></script>
+
+	<!-- bring in leaflet -->
+	<script src="js/leaflet.js"></script>
+	<link rel="stylesheet" href="css/leaflet.css" />
+	<link rel="stylesheet" href="css/slider.css" />
+
+
+</head>
+<!-- body of the page with an onload to run the initialize function -->
+<body onload="hcMapLibrary.initialize()">
+
+
+
+<!-- Modal 1 -->
+<div class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true" id="explainModal">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<table class="table table-hover">
+				<tr>
+					<td width="200"><h4><b>English Map Title</h4></b></td>
+					<td id="maptitleEn"></td>
+				</tr>
+				<tr>
+					<td><h4><b>KML Link<h4></b><input type="button" value="How to use?" class="btn-sm btn-success" data-toggle="modal" data-target="#kmlexplain"></td>
+					<td id="mapkmlLink"></td>
+				</tr>						
+				<tr>
+					<td><h4><b>City<h4></b></td>
+					<td id="mapcity"></td>
+				</tr>
+				<tr>
+	<!-- 				<td><h4><b>Map ID<h4></b></td>
+					<td id="mapId"></td> -->
+				</tr>
+				<tr>
+					<td><h4><b>Creator<h4></b></td>
+					<td id="mapcreator"></td>
+				</tr>
+				<tr>
+					<td><h4><b>Publisher<h4></b></td>
+					<td id="mappublisher"></td>
+				</tr>
+				<tr>
+					<td><h4><b>Date<h4></b></td>
+					<td id="mapdate"></td>
+				</tr>									
+				<tr>
+					<td><h4><b>Map Source<h4></b></td>
+					<td id="mapsource"></td>
+				</tr>											
+			</table>    
+		</div>
+	</div>
+</div>
+
+<!-- Modal 2 -->
+<div class="modal fade bs-example-modal-md" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true" id="kmlexplain">
+	<div class="modal-dialog modal-md">
+		<div class="modal-content">
+			<h4>To use a KML Network link in Google Earth you need to do the following:</h4>
+			<ol>
+				<li>
+				Highlight and then copy the link (Ctrl + C or Command + C)
+				<img src="imgs/1.png" class="img-thumbnail">
+				</li>
+				<li>
+				Open Google Earth
+				</li>
+				<li>
+				Click on "Add Network Link"
+				<img src="imgs/2.png" class="img-thumbnail">
+				</li>
+				<li>
+				Paste the link
+				<img src="imgs/3.png" class="img-thumbnail">
+				</li>
+				<li>
+				Click "Ok"
+				<img src="imgs/4.png" class="img-thumbnail">
+				</li>
+				<li>
+				Double click the new network link layer to zoom to it in Google Earth.
+				<img src="imgs/5.png" class="img-thumbnail">
+				</li>
+				<li>
+				Done!
+				<img src="imgs/6.png" class="img-thumbnail">
+				</li>
+			</ol>            
+		</div>
+	</div>
+</div>
+
+<!-- side panel div container -->
+<div id="side_panel">
+	<div id="container">
+		<a href="index.html"><h1 id="title">Map Library</h1></a>
+		<form>
+			<div class="col-xs-8"><input type="text" class="form-control input-sm" name="search" id="search" placeholder="type to search" />
+			</div>
+			<div class="col-xs-1"><input type="submit" class="btn-sm btn-danger" value="Reset" /></div>
+		</form>
+	</div>
+	<!-- <div id="results"> <span id="theNumber"></span></div> -->
+	<br>	
+	<br>	
+	<br>	
+	<br>	
+	<br>	
+	<br>	
+	<div id="results"></div>
+</div>
+<div id="introBody">
+	Please click a city on the left to retrieve a map.
+</div>
+<div id="mapBody">
+	<br>
+			<div align="center"><h3><span id="maptitle"></span><h3></b>
+			</div></h3></span>
+	<span id='control-container2'>
+		<span onclick="hcMapLibrary.setOpacity(.1)" class="btn-sm btn-info time-control left-border-radius" style=""><span class="glyphicon glyphicon-minus-sign"></span></span>
+		<div id='control2'>
+			<span style="color: #aaa;padding-top:15px;line-height: 34px;">transparency</span>
+			<span id='handle2'></span>
+		</div>
+		<span onclick="hcMapLibrary.setOpacity(-.1)" class="btn-sm btn-info time-control right-border-radius" style=""><span class="glyphicon glyphicon-plus-sign"></span></span>
+	</span>
+	<div id="map" style="height:800px"></div>
+
+
+</div>
+
+<div id="sidemenu">
+</div>
+
+<script src="js/map.js"></script>
+
+</body>
+</html>

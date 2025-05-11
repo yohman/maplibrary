@@ -24,6 +24,10 @@ const opacitySlider = document.getElementById('opacity-slider'); // New
 const mapCountDisplay = document.getElementById('map-count-display'); // NEW: Map count display element
 const boundsToggleSwitch = document.getElementById('bounds-toggle-switch'); // NEW: Bounds toggle switch
 
+// Modal Elements
+const welcomeModal = document.getElementById('welcome-modal');
+const modalCloseButton = document.getElementById('modal-close-button');
+
 let allMapsData = [];
 let activeCustomLayer = null; // To keep track of the currently displayed custom map
 let allBoundsLayerGroup = null; // NEW: Layer group for all map bounds
@@ -106,6 +110,12 @@ async function fetchMapsData() {
 		processAndDisplayAllMaps(); // Display all maps initially
 		createTimeline(); // New: Create the timeline
 		createAllBoundsLayer(); // NEW: Create the bounds layer
+		
+		// If bounds toggle is checked by default, add the layer to the map
+		if (boundsToggleSwitch.checked && allBoundsLayerGroup) {
+			map.addLayer(allBoundsLayerGroup);
+		}
+
 	} catch (error) {
 		console.error("Could not fetch maps data:", error);
 		mapCardsContainer.innerHTML = "<p style='color:#F3361F;'>Error loading map data.</p>";
@@ -976,3 +986,17 @@ searchBox.addEventListener('input', (e) => {
 
 // Initial load of map data
 fetchMapsData();
+
+// Modal Logic
+if (welcomeModal && modalCloseButton) {
+    modalCloseButton.addEventListener('click', () => {
+        welcomeModal.classList.add('modal-hidden');
+    });
+
+    // Optional: Close modal if user clicks on the overlay (outside the content)
+    welcomeModal.addEventListener('click', (event) => {
+        if (event.target === welcomeModal) { // Check if the click is on the overlay itself
+            welcomeModal.classList.add('modal-hidden');
+        }
+    });
+}

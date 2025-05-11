@@ -40,7 +40,7 @@
             <div class="control-group"> <!-- NEW: Wrapper for bounds toggle -->
                 <label for="bounds-toggle-switch">Show All Bounds:</label>
                 <label class="switch">
-                    <input type="checkbox" id="bounds-toggle-switch">
+                    <input type="checkbox" id="bounds-toggle-switch" checked> <!-- MODIFIED: Added checked attribute -->
                     <span class="slider round"></span>
                 </label>
             </div>
@@ -61,6 +61,32 @@
 		<div id="timeline-zoom-indicator" style="position: absolute; top: 5px; right: 10px; color: #ccc; font-size: 0.8em;">Zoom: 1.0x</div>
 		<div id="timeline-tooltip"></div>
 	</div>
+
+    <!-- Welcome Modal -->
+    <div id="welcome-modal" class="modal-overlay">
+        <div class="modal-content">
+            <span id="modal-close-button" class="modal-close">&times;</span>
+            <h1>Welcome to HyperCities Map Library</h1>
+			<p class="tagline">HyperCities: beyond physical cities, an abundant landscape of media, histories, and participatory possibilities.</p>
+            <div class="modal-body-columns">
+				<div class="modal-column-left">
+					<img src="hypercities480.gif" alt="HyperCities Animation" style="vertical-align: top;">
+				</div>
+                <div class="modal-column-right">
+					<h3>Explore the Map Library:</h3>
+                    <ul>
+						<li><strong>Search and Discover:</strong> Use the side panel (☰) to find maps by title and start exploring.</li>
+						<li><strong>Explore Historical Maps:</strong> Click a map card, a point on the timeline, or a boundary on the map.</li>
+
+						<li><strong>Navigate the Timeline:</strong> The timeline displays maps across different years. Click circles to jump to specific times. Zoom and pan for detailed exploration.</li>
+						<li><strong>Customize Your View:</strong> Toggle map boundaries to compare past and present, and adjust map opacity to blend different eras.</li>
+
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
 	<script src="js/map.js"></script>
 </body>
 </html>

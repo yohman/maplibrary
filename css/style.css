@@ -559,3 +559,150 @@ input:checked + .slider:before {
         height: 6px;
     }
 }
+
+/* Welcome Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.75); /* Darker dim */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000; /* Above everything else */
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.modal-content {
+    width: 90%;
+    height: 90%;
+    max-width: 1000px; 
+    max-height: 700px; 
+    background-color: #282828; /* Slightly lighter than panel for differentiation */
+    color: #F4F4F4;
+    padding: 25px 30px;
+    border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.6);
+    position: relative;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+.modal-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 2.5em; /* Larger close button */
+    font-weight: bold;
+    color: #aaaaaa;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s ease;
+}
+
+.modal-close:hover {
+    color: #DA3832; /* Theme red on hover */
+}
+
+.modal-content h1 {
+    color: #DA3832;
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.8em;
+    font-weight: 300;
+}
+
+.modal-content p.tagline {
+    font-style: italic;
+    margin-bottom: 25px;
+    font-size: 1.1em;
+    color: #cccccc;
+}
+
+.modal-body-columns {
+    display: flex;
+    flex-grow: 1; /* Allows columns to fill available space */
+    gap: 30px; /* Space between columns */
+    overflow-y: auto; /* In case content overflows vertically */
+}
+
+.modal-column-left {
+    flex: 1;
+    display: flex;
+    align-items:flex-start; /* Center image vertically if less content */
+    justify-content: center;
+}
+
+.modal-column-right {
+    flex: 1.5; /* Give more space to instructions */
+}
+
+.modal-body-columns img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+    border: 1px solid #444;
+}
+
+.modal-column-right h3 {
+    margin-top: 0;
+    color: #DA3832;
+    font-size: 1.3em;
+    margin-bottom: 10px;
+}
+
+.modal-column-right ul {
+    list-style-type: disc; /* Standard bullets */
+    padding-left: 20px; /* Indent bullets */
+    margin: 0;
+    font-size: 0.95em;
+    line-height: 1.6;
+}
+
+.modal-column-right ul li {
+    margin-bottom: 10px;
+}
+
+.modal-column-right ul li strong {
+    color: #e0e0e0;
+}
+
+.modal-hidden {
+    opacity: 0;
+    pointer-events: none; /* Prevent interaction when hidden */
+}
+
+/* Responsive adjustments for modal */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        height: 95%;
+        padding: 20px;
+    }
+    .modal-body-columns {
+        flex-direction: column; /* Stack columns on smaller screens */
+        gap: 20px;
+    }
+    .modal-column-left, .modal-column-right {
+        flex: none; /* Reset flex sizing */
+        width: 100%;
+    }
+    .modal-content h1 {
+        font-size: 1.5em;
+    }
+    .modal-content p.tagline {
+        font-size: 1em;
+        margin-bottom: 15px;
+    }
+     .modal-column-right h3 {
+        font-size: 1.2em;
+    }
+    .modal-column-right ul {
+        font-size: 0.9em;
+    }
+}

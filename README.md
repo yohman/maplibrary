@@ -2,7 +2,7 @@
 
 ![hypercities reimagined](hypercities.gif)
 
-Discover over 400 georeferenced historical maps—each scanned, tiled, and ready to explore. Navigate the world map to reveal the geographic bounds of every map; scroll the timeline to move through centuries; and filter by keyword to surface maps that match your interests. Click any area or timeline entry to open a high-resolution view and chart your own path through history.
+HyperCities: beyond physical cities, an abundant landscape of media, histories, and participatory possibilities.
 
 ---
 

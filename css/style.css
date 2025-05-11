@@ -618,10 +618,13 @@ input:checked + .slider:before {
 }
 
 .modal-content p.tagline {
+    font-family: 'Georgia', serif; /* Elegant serif font */
     font-style: italic;
     margin-bottom: 25px;
-    font-size: 1.1em;
-    color: #cccccc;
+    font-size: 1em; /* Slightly larger */
+    color: #d4d4d4; /* A shade lighter */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3); /* Subtle shadow for depth */
+    line-height: 1.6; /* Improved readability */
 }
 
 .modal-body-columns {
@@ -634,8 +637,9 @@ input:checked + .slider:before {
 .modal-column-left {
     flex: 1;
     display: flex;
-    align-items:flex-start; /* Center image vertically if less content */
-    justify-content: center;
+    flex-direction: column; /* MODIFIED: Stack image and button vertically */
+    align-items: center; /* MODIFIED: Center items horizontally in the column */
+    justify-content: flex-start; /* MODIFIED: Align items to the start (top) of the column */
 }
 
 .modal-column-right {
@@ -652,15 +656,16 @@ input:checked + .slider:before {
 .modal-column-right h3 {
     margin-top: 0;
     color: #DA3832;
-    font-size: 1.3em;
+    font-size: 1.2em;
     margin-bottom: 10px;
+    font-weight: 300; /* Lighter weight for a softer look */
 }
 
 .modal-column-right ul {
     list-style-type: disc; /* Standard bullets */
     padding-left: 20px; /* Indent bullets */
     margin: 0;
-    font-size: 0.95em;
+    font-size: 0.85em;
     line-height: 1.6;
 }
 
@@ -670,6 +675,16 @@ input:checked + .slider:before {
 
 .modal-column-right ul li strong {
     color: #e0e0e0;
+}
+
+.modal-column-right a { /* NEW: Style for links in modal */
+    color: #cccccc; /* Light grey for better legibility */
+    text-decoration: underline;
+    transition: color 0.2s ease;
+}
+
+.modal-column-right a:hover { /* NEW: Hover style for links */
+    color: #DA3832; /* Theme red on hover */
 }
 
 .modal-hidden {
@@ -706,3 +721,56 @@ input:checked + .slider:before {
         font-size: 0.9em;
     }
 }
+
+#begin-your-journey {
+    /* General Button Styles (inheritable) */
+        display: inline-block; /* Allows setting width and height */
+        padding: 18px 36px; /* Large padding for a bigger button */
+        font-size: 1.3em; /* Large font size */
+        font-weight: 300; /* Semi-bold or bold for emphasis */
+        text-align: center;
+        text-decoration: none;
+        cursor: pointer;
+        border: none;
+        border-radius: 6px; /* Slightly rounded corners */
+        transition: all 0.3s ease; /* Smooth transition for hover effects */
+        overflow: hidden; /* Hide any overflow, e.g., for pseudo-elements */
+        position: relative; /* For positioning pseudo-elements */
+        z-index: 1; /* Ensure text is above pseudo-elements */
+        margin-top: 20px; /* NEW: Add space above the button */
+        
+        /* Theme-Specific Colors */
+        color: #F4F4F4; /* Light text color */
+        background-color: #DA3832; /* Theme red background */
+        
+        /* Hover Effect - Darken and slightly lift */
+    }
+
+    #begin-your-journey:hover {
+        background-color: #c4302a; /* Darker shade of theme red */
+        transform: translateY(-2px); /* Slight lift effect */
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* More pronounced shadow */
+    }
+
+    /* Optional: Add a subtle "glow" effect */
+    #begin-your-journey::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.1); /* Semi-transparent white */
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: -1;
+    }
+
+    #begin-your-journey:hover::before {
+        opacity: 1;
+    }
+
+    #begin-your-journey:active {
+        transform: translateY(0); /* Remove lift on click */
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Reduced shadow on click */
+    }

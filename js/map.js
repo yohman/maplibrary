@@ -27,6 +27,7 @@ const boundsToggleSwitch = document.getElementById('bounds-toggle-switch'); // N
 // Modal Elements
 const welcomeModal = document.getElementById('welcome-modal');
 const modalCloseButton = document.getElementById('modal-close-button');
+const beginJourneyButton = document.getElementById('begin-your-journey'); // NEW: Get reference to the button
 
 let allMapsData = [];
 let activeCustomLayer = null; // To keep track of the currently displayed custom map
@@ -989,9 +990,15 @@ fetchMapsData();
 
 // Modal Logic
 if (welcomeModal && modalCloseButton) {
-    modalCloseButton.addEventListener('click', () => {
+    const closeModal = () => { // Helper function to close modal
         welcomeModal.classList.add('modal-hidden');
-    });
+    };
+
+    modalCloseButton.addEventListener('click', closeModal);
+    
+    if (beginJourneyButton) { // NEW: Add event listener to the new button
+        beginJourneyButton.addEventListener('click', closeModal);
+    }
 
     // Optional: Close modal if user clicks on the overlay (outside the content)
     welcomeModal.addEventListener('click', (event) => {

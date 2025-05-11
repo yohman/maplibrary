@@ -27,6 +27,7 @@
 	<div id="side-panel">
 		<h1>HyperCities Map Library</h1>
 		<input type="text" id="search-box" placeholder="Search maps by title...">
+		<div id="map-count-display" style="margin-bottom: 15px; font-size: 0.9em; color: #999999;"></div> <!-- NEW: Map count display -->
 		<div id="map-cards-container">
 			<!-- Map cards will be populated here -->
 		</div>
@@ -35,9 +36,19 @@
     <!-- Map Container -->
 	<div id="map-container"> <!-- NEW: wrapper for map -->
 	    <div id="map"></div>
-        <div id="opacity-slider-container">
-            <label for="opacity-slider">Opacity:</label>
-            <input type="range" id="opacity-slider" min="0" max="1" step="0.05" value="0.85">
+        <div id="opacity-slider-container"> <!-- This container will now hold both controls -->
+            <div class="control-group"> <!-- NEW: Wrapper for bounds toggle -->
+                <label for="bounds-toggle-switch">Show All Bounds:</label>
+                <label class="switch">
+                    <input type="checkbox" id="bounds-toggle-switch">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <hr> <!-- NEW: Horizontal line separator -->
+            <div class="control-group"> <!-- NEW: Wrapper for opacity slider -->
+                <label for="opacity-slider">Opacity:</label>
+                <input type="range" id="opacity-slider" min="0" max="1" step="0.05" value="0.85">
+            </div>
         </div>
     </div>
 	<div id="timeline-panel">

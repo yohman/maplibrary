@@ -21,9 +21,14 @@ const timelineTooltip = document.getElementById('timeline-tooltip'); // New
 const timelinePanel = document.getElementById('timeline-panel'); // New
 const timelineZoomIndicator = document.getElementById('timeline-zoom-indicator'); // New
 const opacitySlider = document.getElementById('opacity-slider'); // New
+const mapCountDisplay = document.getElementById('map-count-display'); // NEW: Map count display element
+const boundsToggleSwitch = document.getElementById('bounds-toggle-switch'); // NEW: Bounds toggle switch
 
 let allMapsData = [];
 let activeCustomLayer = null; // To keep track of the currently displayed custom map
+let allBoundsLayerGroup = null; // NEW: Layer group for all map bounds
+let currentlyDisplayedMaps = []; // NEW: For filtered maps
+let currentlySelectedMapId = null; // NEW: For selected map
 let minYearGlobal = Infinity; // Renamed from minYear
 let maxYearGlobal = -Infinity; // Renamed from maxYear
 
@@ -96,8 +101,11 @@ async function fetchMapsData() {
 		currentDisplayMaxYear = maxYearGlobal;
 		updateZoomIndicator();
 
+		currentlyDisplayedMaps = [...allMapsData]; // Initialize with all maps
+
 		processAndDisplayAllMaps(); // Display all maps initially
 		createTimeline(); // New: Create the timeline
+		createAllBoundsLayer(); // NEW: Create the bounds layer
 	} catch (error) {
 		console.error("Could not fetch maps data:", error);
 		mapCardsContainer.innerHTML = "<p style='color:#F3361F;'>Error loading map data.</p>";
@@ -107,7 +115,7 @@ async function fetchMapsData() {
 function processAndDisplayAllMaps(searchTerm = "") {
 	const lowerSearchTerm = searchTerm.toLowerCase();
 	
-	const filteredMaps = allMapsData.filter(mapItem => 
+	currentlyDisplayedMaps = allMapsData.filter(mapItem => 
 		mapItem.title.toLowerCase().includes(lowerSearchTerm)
 		// You can extend search to other fields like city or description:
 		// || (mapItem.city && mapItem.city.toLowerCase().includes(lowerSearchTerm))
@@ -115,22 +123,37 @@ function processAndDisplayAllMaps(searchTerm = "") {
 	);
 
 	// Sort by title alphabetically
-	const sortedMaps = filteredMaps.sort((a, b) => {
+	const sortedMaps = currentlyDisplayedMaps.sort((a, b) => { // Use currentlyDisplayedMaps for sorting
 		const titleA = a.title.toLowerCase();
 		const titleB = b.title.toLowerCase();
 		if (titleA < titleB) return -1;
 		if (titleA > titleB) return 1;
 		return 0;
 	});
+	// currentlyDisplayedMaps is already updated by the filter and sort operations above.
+	// No need to reassign sortedMaps to currentlyDisplayedMaps if sorted in place or filter directly assigns.
+	// For clarity, ensure currentlyDisplayedMaps holds the final list to be displayed.
+	currentlyDisplayedMaps = sortedMaps;
 
-	displayMapCards(sortedMaps);
+
+	displayMapCards(currentlyDisplayedMaps);
+	createTimeline(); // Re-create timeline with filtered maps
+	rebuildBoundsLayerIfVisible(); // Rebuild bounds layer with filtered maps
 }
 
 function displayMapCards(mapsToDisplay) {
 	mapCardsContainer.innerHTML = ''; // Clear previous cards
 
+	if (mapCountDisplay) { // NEW: Update map count
+		mapCountDisplay.textContent = `Displaying ${mapsToDisplay.length} of ${allMapsData.length} maps.`;
+	}
+
 	if (mapsToDisplay.length === 0) {
 		mapCardsContainer.innerHTML = "<p>No maps found.</p>";
+		// Optionally, update count here too if you want a specific message for zero results after filtering
+		// if (mapCountDisplay && allMapsData.length > 0) { // Check if it's a filter result
+		// 	mapCountDisplay.textContent = `Displaying 0 of ${allMapsData.length} maps.`;
+		// }
 		return;
 	}
 
@@ -161,12 +184,20 @@ function displayMapCards(mapsToDisplay) {
 		card.addEventListener('click', () => {
 			console.log('Map card clicked. Loading mapItem:', JSON.stringify(mapItem, null, 2));
 			loadMapOnMainDisplay(mapItem); // This calls highlightTimelineCircle
-			// highlightTimelineCircle(String(mapItem.id)); // This call is now primarily handled by loadMapOnMainDisplay and centerTimelineOnYear
 			highlightMapCard(String(mapItem.id)); 
 			if (mapItem.year) { 
 				centerTimelineOnYear(mapItem.year, String(mapItem.id)); // Pass mapId for potential re-highlighting
 			}
 		});
+
+		// Add hover listeners for timeline highlighting
+		card.addEventListener('mouseover', () => {
+			addTimelineHoverHighlight(String(mapItem.id));
+		});
+		card.addEventListener('mouseout', () => {
+			removeTimelineHoverHighlight(String(mapItem.id));
+		});
+
 		mapCardsContainer.appendChild(card);
 	});
 }
@@ -259,6 +290,138 @@ function loadMapOnMainDisplay(mapItem) {
 	}
 	highlightTimelineCircle(String(mapItem.id)); // Ensure mapItem.id is passed as a string
 	highlightMapCard(String(mapItem.id)); // Ensure mapItem.id is passed as a string
+}
+
+// --- NEW: Function to create all map bounds layer ---
+// Helper function to calculate the area of L.latLngBounds
+function getBoundsArea(bounds) {
+    if (!bounds || !bounds.isValid()) {
+        return 0;
+    }
+    // A simple approximation of area. For more accuracy, projection considerations would be needed.
+    // For sorting purposes, (latSpan * lonSpan) is usually sufficient.
+    const latSpan = bounds.getNorth() - bounds.getSouth();
+    const lonSpan = bounds.getEast() - bounds.getWest();
+    return Math.abs(latSpan * lonSpan); // Use Math.abs in case of any weird inversion, though unlikely with L.latLngBounds
+}
+
+function createAllBoundsLayer() {
+    // Uses currentlyDisplayedMaps
+    if (!currentlyDisplayedMaps || currentlyDisplayedMaps.length === 0) {
+        // If allBoundsLayerGroup exists and is on map, remove it
+        if (allBoundsLayerGroup && map.hasLayer(allBoundsLayerGroup)) {
+            map.removeLayer(allBoundsLayerGroup);
+        }
+        allBoundsLayerGroup = L.layerGroup(); // Reset to an empty group
+        // console.warn("No displayed map data available to create bounds layer.");
+        return;
+    }
+
+    // If a layer group already exists, clear its layers before adding new ones.
+    // This is important if this function is called to refresh the bounds.
+    if (allBoundsLayerGroup) {
+        allBoundsLayerGroup.clearLayers();
+    } else {
+        allBoundsLayerGroup = L.layerGroup();
+    }
+
+
+    // Create a new array of map items that have valid bounds, along with their bounds and area
+    const mapsWithValidBounds = currentlyDisplayedMaps.map(mapItem => { // Use currentlyDisplayedMaps
+        let itemBounds = null;
+        if (mapItem.mapping && mapItem.mapping.swLon != null && mapItem.mapping.swLat != null && mapItem.mapping.neLon != null && mapItem.mapping.neLat != null) {
+            const swLat = parseFloat(mapItem.mapping.swLat);
+            const swLon = parseFloat(mapItem.mapping.swLon);
+            const neLat = parseFloat(mapItem.mapping.neLat);
+            const neLon = parseFloat(mapItem.mapping.neLon);
+            if (!isNaN(swLat) && !isNaN(swLon) && !isNaN(neLat) && !isNaN(neLon) && swLon < neLon && swLat < neLat) {
+                itemBounds = L.latLngBounds(L.latLng(swLat, swLon), L.latLng(neLat, neLon));
+            }
+        } else if (mapItem.bounds && Array.isArray(mapItem.bounds) && mapItem.bounds.length === 4) {
+            const swLat = parseFloat(mapItem.bounds[1]);
+            const swLon = parseFloat(mapItem.bounds[0]);
+            const neLat = parseFloat(mapItem.bounds[3]);
+            const neLon = parseFloat(mapItem.bounds[2]);
+            if (!isNaN(swLat) && !isNaN(swLon) && !isNaN(neLat) && !isNaN(neLon) && swLon < neLon && swLat < neLat) {
+                itemBounds = L.latLngBounds(L.latLng(swLat, swLon), L.latLng(neLat, neLon));
+            }
+        }
+        return { mapItem, itemBounds, area: itemBounds ? getBoundsArea(itemBounds) : 0 };
+    }).filter(entry => entry.itemBounds && entry.itemBounds.isValid());
+
+    // Sort maps by area in descending order (largest first)
+    // This makes Leaflet render larger polygons first, so smaller ones are on top and clickable.
+    mapsWithValidBounds.sort((a, b) => b.area - a.area);
+
+    mapsWithValidBounds.forEach(entry => {
+        const { mapItem, itemBounds } = entry;
+        // itemBounds is already validated in the filter step
+        const rectangle = L.rectangle(itemBounds, { 
+            color: '#DA3832', // Theme red
+            weight: 1, 
+            fillOpacity: 0, // CHANGED: Was 0.05
+            fillColor: '#DA3832' // fillColor is still needed for hover effect if fillOpacity changes
+        });
+
+        const tooltipContent = `<b>${mapItem.title}</b><br>Year: ${mapItem.year || 'N/A'}`;
+        rectangle.bindTooltip(tooltipContent);
+
+        rectangle.on('mouseover', function (e) {
+            this.setStyle({ weight: 3, color: '#FFFFFF', fillOpacity: 0 }); // CHANGED: fillOpacity to 0 on hover too
+            addTimelineHoverHighlight(String(mapItem.id)); // Add timeline highlight
+        });
+        rectangle.on('mouseout', function (e) {
+            this.setStyle({ weight: 1, color: '#DA3832', fillOpacity: 0 }); // CHANGED: Was 0.05
+            removeTimelineHoverHighlight(String(mapItem.id)); // Remove timeline highlight
+        });
+        rectangle.on('click', function () {
+            loadMapOnMainDisplay(mapItem);
+            // Optionally, close side panel if open and on mobile for better view
+            if (sidePanel.classList.contains('open') && window.innerWidth < 768) {
+                menuToggle.click();
+            }
+        });
+
+        allBoundsLayerGroup.addLayer(rectangle);
+    });
+}
+
+// NEW: Function to rebuild bounds layer if it's visible
+function rebuildBoundsLayerIfVisible() {
+    if (boundsToggleSwitch.checked) {
+        if (allBoundsLayerGroup && map.hasLayer(allBoundsLayerGroup)) {
+            map.removeLayer(allBoundsLayerGroup); // Remove existing layer
+        }
+        createAllBoundsLayer(); // Re-create with (potentially filtered) currentlyDisplayedMaps
+        if (allBoundsLayerGroup && currentlyDisplayedMaps.length > 0) { // Add back if there are bounds to show
+             map.addLayer(allBoundsLayerGroup);
+        }
+    } else {
+        // If the toggle is off, we still want to ensure the allBoundsLayerGroup
+        // is up-to-date for when it's next toggled on.
+        createAllBoundsLayer();
+    }
+}
+
+
+// --- Event Listener for Bounds Toggle Switch ---
+if (boundsToggleSwitch) {
+    boundsToggleSwitch.addEventListener('change', function() {
+        if (this.checked) {
+            if (allBoundsLayerGroup) {
+                map.addLayer(allBoundsLayerGroup);
+            } else {
+                // Should have been created by fetchMapsData, but as a fallback:
+                console.warn("Bounds layer group not initialized. Attempting to create.");
+                createAllBoundsLayer();
+                if (allBoundsLayerGroup) map.addLayer(allBoundsLayerGroup);
+            }
+        } else {
+            if (allBoundsLayerGroup) {
+                map.removeLayer(allBoundsLayerGroup);
+            }
+        }
+    });
 }
 
 // --- New Timeline Functions ---
@@ -363,7 +526,7 @@ function createTimeline() {
     const displayYearRange = (currentDisplayMaxYear - currentDisplayMinYear === 0) ? 1 : (currentDisplayMaxYear - currentDisplayMinYear);
 
 	const mapsByYear = {};
-	allMapsData.forEach(mapItem => {
+	currentlyDisplayedMaps.forEach(mapItem => { // Use currentlyDisplayedMaps
 		// Only consider maps within the current display range for grouping by year for overlap calculation
         if (mapItem.year && mapItem.year >= currentDisplayMinYear && mapItem.year <= currentDisplayMaxYear) {
 			if (!mapsByYear[mapItem.year]) {
@@ -381,7 +544,7 @@ function createTimeline() {
     const maxDisplacement = baseLineY - circleEffectiveRadius - (verticalSlotSize / 2);
 
 
-	allMapsData.forEach((mapItem, globalIndex) => {
+	currentlyDisplayedMaps.forEach((mapItem, globalIndex) => { // Use currentlyDisplayedMaps
 		if (!mapItem.year || mapItem.year < currentDisplayMinYear || mapItem.year > currentDisplayMaxYear) {
             return; // Don't render circles outside the current zoomed view
         }
@@ -464,13 +627,36 @@ function createTimeline() {
 
 function highlightTimelineCircle(mapId) {
     const mapIdStr = String(mapId); // Ensure comparison is string to string
+    currentlySelectedMapId = mapIdStr; // Set the selected map
+
 	document.querySelectorAll('.timeline-map-circle').forEach(c => {
 		c.classList.remove('highlighted');
+		c.classList.remove('hover-highlight'); // Remove hover highlight as well on new selection
 		if (c.dataset.mapId === mapIdStr) {
 			c.classList.add('highlighted');
 		}
 	});
 }
+
+// NEW: Functions for hover highlighting timeline circles
+function addTimelineHoverHighlight(mapId) {
+    const mapIdStr = String(mapId);
+    document.querySelectorAll('.timeline-map-circle').forEach(c => {
+        if (c.dataset.mapId === mapIdStr) {
+            c.classList.add('hover-highlight');
+        }
+    });
+}
+
+function removeTimelineHoverHighlight(mapId) {
+    const mapIdStr = String(mapId);
+    document.querySelectorAll('.timeline-map-circle').forEach(c => {
+        if (c.dataset.mapId === mapIdStr) {
+            c.classList.remove('hover-highlight');
+        }
+    });
+}
+
 
 function highlightMapCard(mapId) {
     const mapIdStr = String(mapId); // Ensure comparison is string to string

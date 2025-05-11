@@ -67,6 +67,14 @@ body {
     color: #999999; 
 }
 
+#map-count-display { /* NEW: Styling for map count */
+    margin-top: -10px; /* Adjust to position it closer under the search box */
+    margin-bottom: 15px;
+    font-size: 0.9em;
+    color: #cccccc; /* Lighter grey for better visibility */
+    text-align: left; /* Align with search box */
+}
+
 /* Menu Toggle Button Styles */
 #menu-toggle {
     position: fixed;
@@ -221,6 +229,13 @@ body {
     z-index: 2;
 }
 
+.timeline-map-circle.hover-highlight:not(.highlighted) { /* NEW: Hover highlight style, only if not selected */
+    background-color: #e06666; /* Slightly different shade for hover or same as hover */
+    border: 1px solid #f0f0f0;
+    transform: scale(1.3);
+    z-index: 2; /* Ensure it's visible */
+}
+
 #timeline-tooltip {
     display:none;
     position:fixed;
@@ -238,23 +253,99 @@ body {
     background-color: #2a2a2a; /* Darker highlight for card */
 }
 
+/* Basic Toggle Switch CSS */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 34px; /* Smaller width */
+    height: 20px; /* Smaller height */
+}
+
+.switch input { 
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #555555; /* Darker grey for off state */
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 12px; /* Smaller thumb */
+    width: 12px;  /* Smaller thumb */
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: #DA3832; /* Theme red for on state */
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px #DA3832;
+}
+
+input:checked + .slider:before {
+    transform: translateX(14px); /* Adjust translation for smaller size */
+}
+
+.slider.round {
+    border-radius: 20px; /* Adjust for smaller height */
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
 #opacity-slider-container {
     position: absolute;
-    top: 10px;
+    top: 10px; /* MODIFIED: Reset to original top, right will be the same */
     right: 10px;
-    background-color: rgba(28, 28, 28, 0.85); /* #1C1C1C with transparency */
-    padding: 8px 12px;
+    background-color: rgba(28, 28, 28, 0.85);
+    padding: 10px; /* MODIFIED: Uniform padding */
     border-radius: 5px;
-    z-index: 1000; /* Above map, below menu toggle if it overlaps */
+    z-index: 1000;
     color: #F4F4F4;
     font-size: 0.9em;
     display: flex;
-    align-items: center;
+    flex-direction: column; /* MODIFIED: Stack controls vertically */
+    align-items: stretch; /* MODIFIED: Stretch items like hr */
     box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    width: auto; /* MODIFIED: Let content define width, or set a min-width if needed */
 }
 
-#opacity-slider-container label {
-    margin-right: 8px;
+#opacity-slider-container hr { /* NEW: Styles for the horizontal rule */
+    width: 100%;
+    border: none;
+    border-top: 1px solid #555555;
+    margin: 8px 0;
+}
+
+.control-group { /* NEW: Styles for control groups */
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Pushes label left, control right */
+}
+
+.control-group label:first-child { /* Target the text label */
+    margin-right: 8px; /* Keep existing margin for text labels */
+    white-space: nowrap;
+}
+
+#opacity-slider-container label { /* This rule might be too general now, specific to .control-group label:first-child */
+    margin-right: 8px; /* This is fine if it only targets text labels */
     white-space: nowrap;
 }
 
@@ -414,13 +505,14 @@ body {
     #opacity-slider-container {
         padding: 6px 8px;
         font-size: 0.8em;
-        top: 5px; /* Adjust if it clashes with menu toggle */
+        top: 10px; /* MODIFIED: Reset to 10px, consistent with desktop */
         right: 5px;
     }
     
-    #opacity-slider-container label {
-        margin-right: 5px;
-    }
+    /* .control-group label:first-child will handle this from base styles */
+    /* #opacity-slider-container label {
+        margin-right: 5px; 
+    } */
 
     #opacity-slider {
         width: 80px; 

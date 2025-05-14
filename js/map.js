@@ -1094,6 +1094,56 @@ searchBox.addEventListener('input', (e) => {
 	processAndDisplayAllMaps(e.target.value);
 });
 
+// NEW: Function to generate and download KML
+function generateAndDownloadKML(mapItem) {
+    if (!mapItem) {
+        alert('Map data is not available to generate KML.');
+        return;
+    }
+
+    const tileUrl = mapItem.tileUrl || mapItem.tile_url_pattern;
+    let kmlNetworkLinkHref = '';
+
+    if (tileUrl) {
+        const patternStartIndex = tileUrl.indexOf('/{z}/');
+        if (patternStartIndex !== -1) {
+            const basePath = tileUrl.substring(0, patternStartIndex + 1); // e.g., "http://server/path/tileset/"
+            kmlNetworkLinkHref = basePath + 'doc.kml';
+        } else {
+            alert('Could not determine the KML document URL from the map\'s tile URL. The tile URL does not seem to follow the expected pattern (e.g., .../{z}/{x}/{y}.png).');
+            return;
+        }
+    } else {
+        alert('Map data does not contain a tile URL to generate KML.');
+        return;
+    }
+
+    const kmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>${mapItem.title || 'Untitled Map'}</name>
+    <NetworkLink>
+      <Link>
+        <href>${kmlNetworkLinkHref}</href>
+      </Link>
+    </NetworkLink>
+  </Document>
+</kml>`;
+
+    const blob = new Blob([kmlContent], { type: 'application/vnd.google-earth.kml+xml;charset=utf-8' });
+    const safeTitle = (mapItem.title || 'map').replace(/[^\w.-]/g, '_');
+    const filename = `${safeTitle}.kml`;
+
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+}
+
+
 // NEW: Map Info Panel Functions
 function populateInfoPanel(mapItem) {
     if (!mapItem || !mapInfoPanel) return;
@@ -1117,7 +1167,20 @@ function populateInfoPanel(mapItem) {
     const directLink = `${window.location.origin}${window.location.pathname}?mapid=${mapItem.mapid}`;
     panelHTML += `<div class="map-info-detail" style="margin-top: 10px;"><strong>Direct Link:</strong> <a href="${directLink}" target="_blank" style="color: #DA3832;">${directLink}</a></div>`;
     
+    // NEW: Add Download KML link
+    panelHTML += `<div class="map-info-detail" style="margin-top: 5px;"><a href="javascript:void(0);" class="download-kml-link" style="color: #DA3832;">Download KML</a></div>`;
+
     mapInfoPanel.innerHTML = panelHTML;
+
+    // Add event listener for the KML download link
+    const kmlLink = mapInfoPanel.querySelector('.download-kml-link');
+    if (kmlLink) {
+        kmlLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            // mapItem is in scope from the populateInfoPanel function parameter
+            generateAndDownloadKML(mapItem);
+        });
+    }
 }
 
 function updateMapInfoElements(mapItem) {

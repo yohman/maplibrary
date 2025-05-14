@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>NY 1777</name>
+    <NetworkLink>
+      <Link>
+        <href>http://tiles.ats.ucla.edu/tiles/NewYork_1777_Harlem/doc.kml</href>
+      </Link>
+    </NetworkLink>
+  </Document>
+</kml>

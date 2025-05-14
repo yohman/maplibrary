@@ -218,8 +218,8 @@ function displayMapCards(mapsToDisplay) {
 		let cardHTML = '';
 
 		// Add thumbnail if available
-		if (mapItem.thumbnailURL) {
-			cardHTML += `<img src="${mapItem.thumbnailURL}" alt="Thumbnail for ${mapItem.title}" class="map-card-thumbnail">`;
+		if (mapItem.thumbnailUrl) {
+			cardHTML += `<img src="${mapItem.thumbnailUrl}" alt="Thumbnail for ${mapItem.title}" class="map-card-thumbnail">`;
 		}
 		
 		cardHTML += `<div class="map-card-title">${mapItem.title}</div>`;
@@ -1033,8 +1033,8 @@ function populateInfoPanel(mapItem) {
     if (!mapItem || !mapInfoPanel) return;
 
     let panelHTML = '';
-    if (mapItem.thumbnailURL) {
-        panelHTML += `<img src="${mapItem.thumbnailURL}" alt="Thumbnail for ${mapItem.title}" class="map-info-thumbnail">`;
+    if (mapItem.thumbnailUrl) {
+        panelHTML += `<img src="${mapItem.thumbnailUrl}" alt="Thumbnail for ${mapItem.title}" class="map-info-thumbnail">`;
     }
     panelHTML += `<div class="map-info-title">${mapItem.title}</div>`;
     if (mapItem.city) {

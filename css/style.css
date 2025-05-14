@@ -147,8 +147,6 @@ body {
 }
 
 .map-card-thumbnail { /* NEW: Styles for thumbnail */
-    width: 100%; /* Make thumbnail responsive within card */
-    height: 150px; /* Fixed height, adjust as needed */
     object-fit: cover; /* Cover the area, might crop */
     border-radius: 3px; /* Slightly rounded corners for the image */
     margin-bottom: 10px; /* Space below thumbnail */
@@ -494,9 +492,9 @@ input:checked + .slider:before {
 }
 
 #map-info-panel img.map-info-thumbnail {
-    width: 100%;
+    /* width: 100%;
     max-height: 120px;
-    object-fit: cover;
+    object-fit: cover; */
     border-radius: 3px;
     margin-bottom: 8px;
 }

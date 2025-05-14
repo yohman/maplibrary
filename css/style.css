@@ -435,6 +435,92 @@ input:checked + .slider:before {
     box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
 }
 
+/* NEW: Styles for Map Info Button and Panel */
+#info-separator { /* Styles for the HR above the info button */
+    width: 100%;
+    border: none;
+    border-top: 1px solid #555555;
+    margin: 8px 0;
+}
+
+#map-info-button-container {
+    display: flex; /* Changed from display: none; JS will control this */
+    align-items: center;
+    justify-content: space-between; /* Pushes button left, text right */
+    width: 100%;
+    margin-bottom: 5px; /* Space before panel potentially opens */
+}
+
+#map-info-toggle-button {
+    background-color: #333;
+    color: #F4F4F4;
+    border: 1px solid #555;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 1em;
+    font-weight: bold;
+    line-height: 22px; /* Adjust for vertical centering of 'i' */
+    text-align: center;
+    cursor: pointer;
+    padding: 0;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    margin-right: 8px; /* Space between button and "Map Information" text */
+}
+
+#map-info-toggle-button:hover {
+    background-color: #DA3832;
+    border-color: #F4F4F4;
+}
+
+#map-info-button-container span {
+    font-size: 0.9em;
+    color: #cccccc;
+    flex-grow: 1; /* Allows text to take remaining space */
+}
+
+#map-info-panel {
+    background-color: #121212; /* Slightly darker than card background for contrast */
+    color: #F4F4F4;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 10px;
+    margin-top: 5px;
+    width: calc(100% - 20px); /* Full width minus padding */
+    box-sizing: border-box;
+    max-height: 250px; /* Max height before scrolling */
+    overflow-y: auto;
+    font-size: 0.85em;
+}
+
+#map-info-panel img.map-info-thumbnail {
+    width: 100%;
+    max-height: 120px;
+    object-fit: cover;
+    border-radius: 3px;
+    margin-bottom: 8px;
+}
+
+#map-info-panel .map-info-title {
+    font-size: 1.1em; /* Relative to panel's font-size */
+    font-weight: bold;
+    color: #DA3832;
+    margin-bottom: 4px;
+}
+
+#map-info-panel .map-info-detail {
+    font-size: 0.9em; /* Relative to panel's font-size */
+    color: #bbbbbb;
+    margin-bottom: 2px;
+}
+
+#map-info-panel .map-info-description {
+    font-size: 0.9em; /* Relative to panel's font-size */
+    color: #aaaaaa;
+    margin-top: 5px;
+    line-height: 1.4;
+}
+
 /* Mobile Friendliness */
 @media (max-width: 768px) {
     #side-panel {

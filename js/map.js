@@ -29,7 +29,14 @@ const welcomeModal = document.getElementById('welcome-modal');
 const modalCloseButton = document.getElementById('modal-close-button');
 const beginJourneyButton = document.getElementById('begin-your-journey'); // NEW: Get reference to the button
 
-let allMapsData = [];
+// NEW: Map Info Panel Elements (ensure these are declared if not already)
+const infoSeparator = document.getElementById('info-separator');
+const mapInfoButtonContainer = document.getElementById('map-info-button-container');
+const mapInfoToggleButton = document.getElementById('map-info-toggle-button');
+const mapInfoPanel = document.getElementById('map-info-panel');
+let currentMapForInfoPanel = null;
+
+// let allMapsData = [];
 let activeCustomLayer = null; // To keep track of the currently displayed custom map
 let allBoundsLayerGroup = null; // NEW: Layer group for all map bounds
 let currentlyDisplayedMaps = []; // NEW: For filtered maps
@@ -79,49 +86,84 @@ window.addEventListener('resize', () => {
 	}
 });
 
-async function fetchMapsData() {
-	try {
-		const response = await fetch('data/maps.json'); // Assuming maps.json is in a 'data' folder
-		if (!response.ok) {
-			throw new Error(`HTTP error! status: ${response.status}`);
-		}
-		allMapsData = await response.json();
 
-		// Calculate min and max years
-		allMapsData.forEach(mapItem => {
-			if (mapItem.mapping && mapItem.mapping.dateFrom && mapItem.mapping.dateFrom.date) {
-				const year = parseInt(mapItem.mapping.dateFrom.date.split('-')[0], 10);
-				if (!isNaN(year)) {
-					if (year < minYearGlobal) minYearGlobal = year;
-					if (year > maxYearGlobal) maxYearGlobal = year;
-					mapItem.year = year; // Store parsed year for easier access
-				}
-			}
-		});
-		// Sort allMapsData by year for consistent vertical placement
-		allMapsData.sort((a,b) => (a.year || 0) - (b.year || 0));
-		
-		// Initialize display years for timeline
-		currentDisplayMinYear = minYearGlobal;
-		currentDisplayMaxYear = maxYearGlobal;
-		updateZoomIndicator();
+function init() {
+    console.log("Initializing map and loading data...");
+    // Calculate min and max years
+    allMapsData.forEach(mapItem => {
+        if (mapItem['mapping.dateFrom.date'] && mapItem['mapping.dateFrom.date'] !== '') {
+            console.log(`Processing map item: ${mapItem.title}`);
+            const year = parseInt(mapItem['mapping.dateFrom.date'].split('-')[0], 10);
+            if (!isNaN(year)) {
+                if (year < minYearGlobal) minYearGlobal = year;
+                if (year > maxYearGlobal) maxYearGlobal = year;
+                mapItem.year = year; // Store parsed year for easier access
+            }
+        }
+    });
+    // Sort allMapsData by year for consistent vertical placement
+    allMapsData.sort((a,b) => (a.year || 0) - (b.year || 0));
+    
+    // Initialize display years for timeline
+    currentDisplayMinYear = minYearGlobal;
+    currentDisplayMaxYear = maxYearGlobal;
+    updateZoomIndicator();
 
-		currentlyDisplayedMaps = [...allMapsData]; // Initialize with all maps
+    currentlyDisplayedMaps = [...allMapsData]; // Initialize with all maps
 
-		processAndDisplayAllMaps(); // Display all maps initially
-		createTimeline(); // New: Create the timeline
-		createAllBoundsLayer(); // NEW: Create the bounds layer
-		
-		// If bounds toggle is checked by default, add the layer to the map
-		if (boundsToggleSwitch.checked && allBoundsLayerGroup) {
-			map.addLayer(allBoundsLayerGroup);
-		}
-
-	} catch (error) {
-		console.error("Could not fetch maps data:", error);
-		mapCardsContainer.innerHTML = "<p style='color:#F3361F;'>Error loading map data.</p>";
-	}
+    processAndDisplayAllMaps(); // Display all maps initially
+    createTimeline(); // New: Create the timeline
+    createAllBoundsLayer(); // NEW: Create the bounds layer
+    
+    // If bounds toggle is checked by default, add the layer to the map
+    if (boundsToggleSwitch.checked && allBoundsLayerGroup) {
+        map.addLayer(allBoundsLayerGroup);
+    }
 }
+
+// async function fetchMapsData() {
+// 	try {
+// 		const response = await fetch('data/maps.json'); // Assuming maps.json is in a 'data' folder
+// 		if (!response.ok) {
+// 			throw new Error(`HTTP error! status: ${response.status}`);
+// 		}
+// 		allMapsData = await response.json();
+
+// 		// Calculate min and max years
+// 		allMapsData.forEach(mapItem => {
+// 			if (mapItem.mapping.dateFrom && mapItem.mapping.dateFrom.date) {
+// 				const year = parseInt(mapItem.mapping.dateFrom.date.split('-')[0], 10);
+// 				if (!isNaN(year)) {
+// 					if (year < minYearGlobal) minYearGlobal = year;
+// 					if (year > maxYearGlobal) maxYearGlobal = year;
+// 					mapItem.year = year; // Store parsed year for easier access
+// 				}
+// 			}
+// 		});
+// 		// Sort allMapsData by year for consistent vertical placement
+// 		allMapsData.sort((a,b) => (a.year || 0) - (b.year || 0));
+		
+// 		// Initialize display years for timeline
+// 		currentDisplayMinYear = minYearGlobal;
+// 		currentDisplayMaxYear = maxYearGlobal;
+// 		updateZoomIndicator();
+
+// 		currentlyDisplayedMaps = [...allMapsData]; // Initialize with all maps
+
+// 		processAndDisplayAllMaps(); // Display all maps initially
+// 		createTimeline(); // New: Create the timeline
+// 		createAllBoundsLayer(); // NEW: Create the bounds layer
+		
+// 		// If bounds toggle is checked by default, add the layer to the map
+// 		if (boundsToggleSwitch.checked && allBoundsLayerGroup) {
+// 			map.addLayer(allBoundsLayerGroup);
+// 		}
+
+// 	} catch (error) {
+// 		console.error("Could not fetch maps data:", error);
+// 		mapCardsContainer.innerHTML = "<p style='color:#F3361F;'>Error loading map data.</p>";
+// 	}
+// }
 
 function processAndDisplayAllMaps(searchTerm = "") {
 	const lowerSearchTerm = searchTerm.toLowerCase();
@@ -182,8 +224,8 @@ function displayMapCards(mapsToDisplay) {
 		
 		cardHTML += `<div class="map-card-title">${mapItem.title}</div>`;
 		if (mapItem.city) cardHTML += `<div class="map-card-info">City: ${mapItem.city}</div>`;
-		if (mapItem.mapping && mapItem.mapping.dateFrom && mapItem.mapping.dateFrom.date) {
-			const dateString = mapItem.mapping.dateFrom.date;
+		if (mapItem['mapping.dateFrom.date']) {
+			const dateString = mapItem[['mapping.dateFrom.date']];
 			const year = dateString.split('-')[0]; // Extract year from "yyyy-mm-dd hh:mm:ss"
 			cardHTML += `<div class="map-card-info">Year: ${year}</div>`;
 		}
@@ -242,11 +284,11 @@ function loadMapOnMainDisplay(mapItem) {
 
 	// Construct bounds for Leaflet: [[southWestLat, southWestLng], [northEastLat, northEastLng]]
 	let mapBoundsLeaflet = null;
-	if (mapItem.mapping && mapItem.mapping.swLon != null && mapItem.mapping.swLat != null && mapItem.mapping.neLon != null && mapItem.mapping.neLat != null) {
-		const swLat = parseFloat(mapItem.mapping.swLat);
-		const swLon = parseFloat(mapItem.mapping.swLon);
-		const neLat = parseFloat(mapItem.mapping.neLat);
-		const neLon = parseFloat(mapItem.mapping.neLon);
+	if (mapItem['mapping.swLon'] != null && mapItem['mapping.swLat'] != null && mapItem['mapping.neLon'] != null && mapItem['mapping.neLat'] != null) {
+		const swLat = parseFloat(mapItem['mapping.swLat']);
+		const swLon = parseFloat(mapItem['mapping.swLon']);
+		const neLat = parseFloat(mapItem['mapping.neLat']);
+		const neLon = parseFloat(mapItem['mapping.neLon']);
 
 		if (!isNaN(swLat) && !isNaN(swLon) && !isNaN(neLat) && !isNaN(neLon) &&
 			swLon < neLon && swLat < neLat) { // Basic validation
@@ -301,6 +343,7 @@ function loadMapOnMainDisplay(mapItem) {
 	}
 	highlightTimelineCircle(String(mapItem.id)); // Ensure mapItem.id is passed as a string
 	highlightMapCard(String(mapItem.id)); // Ensure mapItem.id is passed as a string
+	updateMapInfoElements(mapItem); // ADDED: Update and show info button/panel elements
 }
 
 // --- NEW: Function to create all map bounds layer ---
@@ -340,11 +383,11 @@ function createAllBoundsLayer() {
     // Create a new array of map items that have valid bounds, along with their bounds and area
     const mapsWithValidBounds = currentlyDisplayedMaps.map(mapItem => { // Use currentlyDisplayedMaps
         let itemBounds = null;
-        if (mapItem.mapping && mapItem.mapping.swLon != null && mapItem.mapping.swLat != null && mapItem.mapping.neLon != null && mapItem.mapping.neLat != null) {
-            const swLat = parseFloat(mapItem.mapping.swLat);
-            const swLon = parseFloat(mapItem.mapping.swLon);
-            const neLat = parseFloat(mapItem.mapping.neLat);
-            const neLon = parseFloat(mapItem.mapping.neLon);
+        if (mapItem['mapping.swLon'] != null && mapItem['mapping.swLat'] != null && mapItem['mapping.neLon'] != null && mapItem['mapping.neLat'] != null) {
+            const swLat = parseFloat(mapItem['mapping.swLat']);
+            const swLon = parseFloat(mapItem['mapping.swLon']);
+            const neLat = parseFloat(mapItem['mapping.neLat']);
+            const neLon = parseFloat(mapItem['mapping.neLon']);
             if (!isNaN(swLat) && !isNaN(swLon) && !isNaN(neLat) && !isNaN(neLon) && swLon < neLon && swLat < neLat) {
                 itemBounds = L.latLngBounds(L.latLng(swLat, swLon), L.latLng(neLat, neLon));
             }
@@ -985,8 +1028,59 @@ searchBox.addEventListener('input', (e) => {
 	processAndDisplayAllMaps(e.target.value);
 });
 
-// Initial load of map data
-fetchMapsData();
+// NEW: Map Info Panel Functions
+function populateInfoPanel(mapItem) {
+    if (!mapItem || !mapInfoPanel) return;
+
+    let panelHTML = '';
+    if (mapItem.thumbnailURL) {
+        panelHTML += `<img src="${mapItem.thumbnailURL}" alt="Thumbnail for ${mapItem.title}" class="map-info-thumbnail">`;
+    }
+    panelHTML += `<div class="map-info-title">${mapItem.title}</div>`;
+    if (mapItem.city) {
+        panelHTML += `<div class="map-info-detail">City: ${mapItem.city}</div>`;
+    }
+    // mapItem.year is added during init()
+    if (mapItem.year) { 
+        panelHTML += `<div class="map-info-detail">Year: ${mapItem.year}</div>`;
+    }
+    if (mapItem.description) {
+        panelHTML += `<div class="map-info-description">${mapItem.description}</div>`;
+    }
+    mapInfoPanel.innerHTML = panelHTML;
+}
+
+function updateMapInfoElements(mapItem) {
+    currentMapForInfoPanel = mapItem; 
+
+    if (mapItem) {
+        if (infoSeparator) infoSeparator.style.display = 'block';
+        if (mapInfoButtonContainer) mapInfoButtonContainer.style.display = 'flex';
+        populateInfoPanel(mapItem);
+    } else {
+        if (infoSeparator) infoSeparator.style.display = 'none';
+        if (mapInfoButtonContainer) mapInfoButtonContainer.style.display = 'none';
+        if (mapInfoPanel) {
+            mapInfoPanel.style.display = 'none'; // Hide panel if no map is selected
+            mapInfoPanel.innerHTML = ''; 
+        }
+    }
+}
+
+if (mapInfoToggleButton) {
+    mapInfoToggleButton.addEventListener('click', () => {
+        if (mapInfoPanel && currentMapForInfoPanel) { 
+            const isHidden = mapInfoPanel.style.display === 'none' || mapInfoPanel.style.display === '';
+            if (isHidden) {
+                // Panel is about to be shown, populate if not already (should be)
+                // populateInfoPanel(currentMapForInfoPanel); // Already populated by updateMapInfoElements
+                mapInfoPanel.style.display = 'block';
+            } else {
+                mapInfoPanel.style.display = 'none';
+            }
+        }
+    });
+}
 
 // Modal Logic
 if (welcomeModal && modalCloseButton) {
@@ -1007,3 +1101,6 @@ if (welcomeModal && modalCloseButton) {
         }
     });
 }
+
+// Initial setup call to hide map info elements
+updateMapInfoElements(null);

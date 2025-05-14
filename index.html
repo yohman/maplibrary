@@ -49,6 +49,15 @@
                 <label for="opacity-slider">Opacity:</label>
                 <input type="range" id="opacity-slider" min="0" max="1" step="0.05" value="0.85">
             </div>
+            <!-- NEW: Map Info Button and Panel -->
+            <hr id="info-separator" style="display: none;">
+            <div id="map-info-button-container" style="display: none;">
+                <button id="map-info-toggle-button">i</button>
+                <span>Map Information</span>
+            </div>
+            <div id="map-info-panel" style="display: none;">
+                <!-- Map details will be populated here by JavaScript -->
+            </div>
         </div>
     </div>
 	<div id="timeline-panel">
@@ -67,7 +76,7 @@
         <div class="modal-content">
             <span id="modal-close-button" class="modal-close">&times;</span>
             <h1>HyperCities</h1>
-			<p class="tagline">A HyperCity is a real city overlaid with thick information networks that not only catalyze the present but also go back in time to document the past and go forward to project future possibilities. HyperCities are always under construction.</p>
+			<p class="tagline">"A HyperCity is a real city overlaid with thick information networks that not only catalyze the present but also go back in time to document the past and go forward to project future possibilities. HyperCities are always under construction."</p>
             <div class="modal-body-columns">
 				<div class="modal-column-left">
 					<img src="hypercities480.gif" alt="HyperCities Animation" style="vertical-align: top;">
@@ -90,6 +99,7 @@
         </div>
     </div>
 
+	<script src="js/getdata.js"></script>
 	<script src="js/map.js"></script>
 </body>
 </html>

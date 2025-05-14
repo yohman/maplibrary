@@ -245,7 +245,52 @@ body {
     z-index:1010;
     font-size:0.9em;
     pointer-events:none;
+    max-width: 250px; /* Existing: Adjust max-width for potential image */
+    text-align: center; /* Existing: Center content if image is present */
 }
+
+#timeline-tooltip img.timeline-tooltip-thumbnail { /* NEW: Styles for thumbnail in tooltip */
+    max-width: 250; /* Adjust as needed */
+    max-height: 75px; /* Adjust as needed */
+    object-fit: cover;
+    border-radius: 3px;
+    margin-top: 5px; /* Space above thumbnail if text is also present */
+    display: block; /* Make it a block to center with margin auto or if text-align center on parent */
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 3px; /* Space below thumbnail */
+}
+
+/* NEW: Styling for Leaflet's default tooltips (used for polygons) to match our theme and control width */
+.leaflet-tooltip {
+    background-color: #333; /* Match timeline-tooltip background */
+    color: white; /* Match timeline-tooltip text color */
+    border: 1px solid #DA3832; /* Match timeline-tooltip border */
+    border-radius: 4px; /* Match timeline-tooltip border-radius */
+    padding: 5px 8px; /* Match timeline-tooltip padding */
+    font-size: 0.9em; /* Match timeline-tooltip font-size */
+    max-width: 250px; /* Set a max-width */
+    white-space: normal; /* Allow text to wrap */
+    text-align: center; /* Center content, especially if image is present */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5); /* Custom shadow, darker */
+    /* pointer-events: none; already set by Leaflet */
+    /* position: absolute; already set by Leaflet */
+    /* -webkit-user-select: none; etc. already set by Leaflet */
+}
+
+/* Ensure images within Leaflet tooltips also use the shared class if desired, or style directly */
+.leaflet-tooltip img.timeline-tooltip-thumbnail {
+    max-width: 250px;
+    max-height: 75px;
+    object-fit: cover;
+    border-radius: 3px;
+    margin-top: 5px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 3px;
+}
+
 .map-card.highlighted {
     border-left: 4px solid #DA3832;
     background-color: #2a2a2a; /* Darker highlight for card */
@@ -485,6 +530,7 @@ input:checked + .slider:before {
     padding: 10px;
     margin-top: 5px;
     width: calc(100% - 20px); /* Full width minus padding */
+    max-width: 300px; /* NEW: Added max-width */
     box-sizing: border-box;
     max-height: 250px; /* Max height before scrolling */
     overflow-y: auto;

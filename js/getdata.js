@@ -54,7 +54,7 @@ async function checkAndInit() {
         console.log('Processed Maps Data:', allMapsData);
 
         // only include data where tileDomain is http://tiles.ats.ucla.edu
-        allMapsData = allMapsData.filter(item => item.tileDomain === 'http://tiles.ats.ucla.edu');
+        // allMapsData = allMapsData.filter(item => item.tileDomain === 'http://tiles.ats.ucla.edu');
 
 		// Wait for both DOM and data to be ready
 		if (document.readyState === 'loading') {

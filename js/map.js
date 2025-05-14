@@ -86,6 +86,41 @@ window.addEventListener('resize', () => {
 	}
 });
 
+// NEW: Function to get map ID from URL
+function getMapIdFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('mapid');
+}
+
+// NEW: Function to update URL with map ID
+function updateURLWithMapId(mapId) {
+    if (history.pushState) {
+        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + (mapId ? `?mapid=${mapId}` : '');
+        window.history.pushState({path:newUrl}, '', newUrl);
+    }
+}
+
+// NEW: Function to load map based on URL parameters
+function loadMapFromURLParameters(isInitialLoad = false) {
+    const mapIdFromURL = getMapIdFromURL();
+    if (mapIdFromURL) {
+        const mapToLoad = allMapsData.find(m => String(m.mapid) === mapIdFromURL);
+        if (mapToLoad) {
+            loadMapOnMainDisplay(mapToLoad, !isInitialLoad); // Don't update URL if it's from initial load or popstate
+            highlightMapCard(String(mapToLoad.mapid));
+            if (mapToLoad.year) {
+                centerTimelineOnYear(mapToLoad.year, String(mapToLoad.mapid));
+            }
+            // Ensure the info panel is open for the map loaded from URL
+            if (mapInfoPanel && currentMapForInfoPanel && String(currentMapForInfoPanel.mapid) === mapIdFromURL) {
+                mapInfoPanel.style.display = 'block';
+            }
+        } else {
+            console.warn(`Map with ID "${mapIdFromURL}" not found.`);
+            if (isInitialLoad) updateURLWithMapId(null); // Clear invalid mapid from URL on initial load
+        }
+    }
+}
 
 function init() {
     console.log("Initializing map and loading data...");
@@ -118,6 +153,23 @@ function init() {
     // If bounds toggle is checked by default, add the layer to the map
     if (boundsToggleSwitch.checked && allBoundsLayerGroup) {
         map.addLayer(allBoundsLayerGroup);
+    }
+
+    const mapIdFromURL = getMapIdFromURL(); // Get mapId from URL
+
+    if (mapIdFromURL) { // NEW: If mapid exists in URL
+        if (welcomeModal) {
+            welcomeModal.classList.add('modal-hidden'); // Hide the modal
+        }
+        loadMapFromURLParameters(true); 
+    } else {
+        // Only call loadMapFromURLParameters if there's no mapId, 
+        // or if you want to handle other non-mapId params.
+        // If mapId is the only param handled by loadMapFromURLParameters, 
+        // and it's not present, no need to call it.
+        // However, if loadMapFromURLParameters has other logic for no-params state, keep it.
+        // For now, assuming it's primarily for mapId:
+        // loadMapFromURLParameters(true); // This was here, but now handled by the if/else
     }
 }
 
@@ -213,7 +265,7 @@ function displayMapCards(mapsToDisplay) {
 	mapsToDisplay.forEach(mapItem => {
 		const card = document.createElement('div');
 		card.className = 'map-card';
-		card.dataset.mapId = String(mapItem.id); // Ensure mapId is a string for dataset
+		card.dataset.mapId = String(mapItem.mapid); // Ensure mapId is a string for dataset
 		
 		let cardHTML = '';
 
@@ -237,25 +289,25 @@ function displayMapCards(mapsToDisplay) {
 		card.addEventListener('click', () => {
 			console.log('Map card clicked. Loading mapItem:', JSON.stringify(mapItem, null, 2));
 			loadMapOnMainDisplay(mapItem); // This calls highlightTimelineCircle
-			highlightMapCard(String(mapItem.id)); 
+			highlightMapCard(String(mapItem.mapid)); 
 			if (mapItem.year) { 
-				centerTimelineOnYear(mapItem.year, String(mapItem.id)); // Pass mapId for potential re-highlighting
+				centerTimelineOnYear(mapItem.year, String(mapItem.mapid)); // Pass mapId for potential re-highlighting
 			}
 		});
 
 		// Add hover listeners for timeline highlighting
 		card.addEventListener('mouseover', () => {
-			addTimelineHoverHighlight(String(mapItem.id));
+			addTimelineHoverHighlight(String(mapItem.mapid));
 		});
 		card.addEventListener('mouseout', () => {
-			removeTimelineHoverHighlight(String(mapItem.id));
+			removeTimelineHoverHighlight(String(mapItem.mapid));
 		});
 
 		mapCardsContainer.appendChild(card);
 	});
 }
 
-function loadMapOnMainDisplay(mapItem) {
+function loadMapOnMainDisplay(mapItem, shouldUpdateURL = true) { // MODIFIED: Added shouldUpdateURL parameter
 	console.log("Loading map with Leaflet:", mapItem); 
 	if (!map) {
 		console.error("Leaflet map object is not initialized.");
@@ -265,11 +317,15 @@ function loadMapOnMainDisplay(mapItem) {
 	console.log(`Attempting to load map: ${mapItem.title}`);
 	
 	let tileSourceUrl = mapItem.tileUrl ? mapItem.tileUrl : mapItem.tile_url_pattern;
-	if (mapItem.tileUrl && !mapItem.tileUrl.endsWith("/")) {
-		tileSourceUrl += "/";
-	}
-	tileSourceUrl = tileSourceUrl + '{z}/{x}/{y}.png';
-	
+
+	// if (mapItem.tileUrl && !mapItem.tileUrl.endsWith("/")) {
+	// 	tileSourceUrl += "/";
+	// }
+
+    // if (!tileSourceUrl.includes('{z}/{x}/{y}')) {
+    //     tileSourceUrl = tileSourceUrl + '{z}/{x}/{y}.png';
+    // }
+    
 	if (!tileSourceUrl) {
 		console.error("Map item does not have a valid tileUrl or tile_url_pattern.", mapItem);
 		return;
@@ -341,9 +397,12 @@ function loadMapOnMainDisplay(mapItem) {
 		// Optionally, set a default view if bounds are missing/invalid
 		// map.setView([defaultLat, defaultLng], defaultZoom);
 	}
-	highlightTimelineCircle(String(mapItem.id)); // Ensure mapItem.id is passed as a string
-	highlightMapCard(String(mapItem.id)); // Ensure mapItem.id is passed as a string
+	highlightTimelineCircle(String(mapItem.mapid)); // Ensure mapItem.mapid is passed as a string
+	highlightMapCard(String(mapItem.mapid)); // Ensure mapItem.mapid is passed as a string
 	updateMapInfoElements(mapItem); // ADDED: Update and show info button/panel elements
+    if (shouldUpdateURL) { // MODIFIED: Conditionally update URL
+        updateURLWithMapId(mapItem.mapid);
+    }
 }
 
 // --- NEW: Function to create all map bounds layer ---
@@ -417,16 +476,19 @@ function createAllBoundsLayer() {
             fillColor: '#DA3832' // fillColor is still needed for hover effect if fillOpacity changes
         });
 
-        const tooltipContent = `<b>${mapItem.title}</b><br>Year: ${mapItem.year || 'N/A'}`;
+        let tooltipContent = `<b>${mapItem.title}</b><br>Year: ${mapItem.year || 'N/A'}`;
+        if (mapItem.thumbnailUrl) { // NEW: Add thumbnail to tooltip if available
+            tooltipContent += `<br><img src="${mapItem.thumbnailUrl}" alt="Thumbnail" class="timeline-tooltip-thumbnail">`;
+        }
         rectangle.bindTooltip(tooltipContent);
 
         rectangle.on('mouseover', function (e) {
             this.setStyle({ weight: 3, color: '#FFFFFF', fillOpacity: 0 }); // CHANGED: fillOpacity to 0 on hover too
-            addTimelineHoverHighlight(String(mapItem.id)); // Add timeline highlight
+            addTimelineHoverHighlight(String(mapItem.mapid)); // Add timeline highlight
         });
         rectangle.on('mouseout', function (e) {
             this.setStyle({ weight: 1, color: '#DA3832', fillOpacity: 0 }); // CHANGED: Was 0.05
-            removeTimelineHoverHighlight(String(mapItem.id)); // Remove timeline highlight
+            removeTimelineHoverHighlight(String(mapItem.mapid)); // Remove timeline highlight
         });
         rectangle.on('click', function () {
             loadMapOnMainDisplay(mapItem);
@@ -610,12 +672,12 @@ function createTimeline() {
 
 		const circle = document.createElement('div');
 		circle.className = 'timeline-map-circle';
-		circle.dataset.mapId = String(mapItem.id); // Ensure mapId is a string for dataset
+		circle.dataset.mapId = String(mapItem.mapid); // Ensure mapId is a string for dataset
 		circle.style.left = `${leftPosition - circleEffectiveRadius}px`; // Adjust left for circle's own radius
 
         let yPositionCenter;
         const numInSameYear = mapsByYear[mapItem.year] ? mapsByYear[mapItem.year].length : 0;
-        const itemIndexInYear = mapsByYear[mapItem.year] ? mapsByYear[mapItem.year].findIndex(m => m.id === mapItem.id) : 0;
+        const itemIndexInYear = mapsByYear[mapItem.year] ? mapsByYear[mapItem.year].findIndex(m => m.mapid === mapItem.mapid) : 0;
 
         if (numInSameYear > 1) {
             // Stack items within the same year, try to use available space
@@ -654,7 +716,11 @@ function createTimeline() {
 
 
 		circle.addEventListener('mouseover', (e) => {
-			timelineTooltip.innerHTML = `${mapItem.year || 'N/A'}: ${mapItem.title}`; // Added year to tooltip
+			let tooltipHTML = `${mapItem.year || 'N/A'}: ${mapItem.title}`;
+			if (mapItem.thumbnailUrl) { // NEW: Add thumbnail to tooltip if available
+				tooltipHTML += `<br><img src="${mapItem.thumbnailUrl}" alt="Thumbnail" class="timeline-tooltip-thumbnail">`;
+			}
+			timelineTooltip.innerHTML = tooltipHTML;
 			timelineTooltip.style.display = 'block';
             // Position tooltip above the circle
             const rect = e.target.getBoundingClientRect();
@@ -671,8 +737,8 @@ function createTimeline() {
 		});
 		circle.addEventListener('click', () => {
 			loadMapOnMainDisplay(mapItem);
-			highlightTimelineCircle(String(mapItem.id)); // Ensure mapItem.id is passed as a string
-			highlightMapCard(String(mapItem.id)); // Ensure mapItem.id is passed as a string
+			highlightTimelineCircle(String(mapItem.mapid)); // Ensure mapItem.mapid is passed as a string
+			highlightMapCard(String(mapItem.mapid)); // Ensure mapItem.mapid is passed as a string
 		});
 
 		timelineCirclesContainer.appendChild(circle);
@@ -1047,6 +1113,10 @@ function populateInfoPanel(mapItem) {
     if (mapItem.description) {
         panelHTML += `<div class="map-info-description">${mapItem.description}</div>`;
     }
+    // NEW: Add direct link
+    const directLink = `${window.location.origin}${window.location.pathname}?mapid=${mapItem.mapid}`;
+    panelHTML += `<div class="map-info-detail" style="margin-top: 10px;"><strong>Direct Link:</strong> <a href="${directLink}" target="_blank" style="color: #DA3832;">${directLink}</a></div>`;
+    
     mapInfoPanel.innerHTML = panelHTML;
 }
 
@@ -1104,3 +1174,10 @@ if (welcomeModal && modalCloseButton) {
 
 // Initial setup call to hide map info elements
 updateMapInfoElements(null);
+
+// NEW: Listen for browser back/forward navigation
+window.addEventListener('popstate', function(event) {
+    // When URL changes due to back/forward, reload the map based on the new URL's mapid
+    // We pass false to shouldUpdateURL because the URL is already what it should be.
+    loadMapFromURLParameters(false); 
+});

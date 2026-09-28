@@ -5,8 +5,8 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const event = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, "utf8"));
 const issue = event.issue;
-const trustedAccount = "yohman";
-if (issue?.user?.login !== trustedAccount) throw new Error("Only the allowlisted Map Library account may publish metadata edits.");
+const trustedAccounts = new Set(["yohman", "toddpresner"]);
+if (!trustedAccounts.has(issue?.user?.login)) throw new Error("Only allowlisted Map Library accounts may publish metadata edits.");
 
 const csvPath = path.join(root, "data/maps.csv");
 const mapJsonPath = path.join(root, "data/maps.json");

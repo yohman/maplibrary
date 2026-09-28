@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   publish:
-    if: github.event.issue.user.login == 'yohman'
+    if: github.event.issue.user.login == 'yohman' || github.event.issue.user.login == 'toddpresner'
     runs-on: ubuntu-latest
     outputs:
       map_id: ${{ steps.apply.outputs.map_id }}
@@ -51,7 +51,7 @@ jobs:
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
   report:
-    if: always() && github.event.issue.user.login == 'yohman'
+    if: always() && (github.event.issue.user.login == 'yohman' || github.event.issue.user.login == 'toddpresner')
     needs: publish
     runs-on: ubuntu-latest
     steps:

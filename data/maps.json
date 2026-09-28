@@ -19669,13 +19669,13 @@
   },
   {
     "city": "Berlin",
-    "title": "Map of Berlin",
-    "titleEn": "Map of Berlin",
+    "title": "DIe Churfürstliche Residenzstadt Berlin beim Tode Friedrich Wilhelm des Grossen im Jahre 1688",
+    "titleEn": "The Residential City of Berlin as of the death of Fredrick the Great in 1688",
     "creator": "",
-    "publicationDate": null,
+    "publicationDate": "1688",
     "publisher": "",
     "copyright": "",
-    "description": "Map of Berlin",
+    "description": "Map of Berlin showing the walled city with Berlin on the north side of the Spree and Koln on the south side. The castle stands on Spree Island.",
     "mapping": {
       "kml": "",
       "neLat": "52.52688500",

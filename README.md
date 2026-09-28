@@ -4,6 +4,8 @@
 
 HyperCities: beyond physical cities, an abundant landscape of media, histories, and participatory possibilities.
 
+Map metadata editing and the automated publication workflow are documented in [METADATA-EDITING.md](METADATA-EDITING.md).
+
 ---
 
 ## World Map
@@ -16,5 +18,5 @@ HyperCities: beyond physical cities, an abundant landscape of media, histories, 
 - Hover or click an entry to highlight its map on the globe  
 
 ## Search & Filter
-- Keyword search refines both map thumbnails and timeline entries in real time  
-- Visible polygons and timeline entries update dynamically as you type  
+- Keyword search refines both map thumbnails and timeline entries in real time
+- Visible polygons and timeline entries update dynamically as you type
